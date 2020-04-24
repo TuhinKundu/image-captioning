@@ -2,12 +2,15 @@ import torch
 import torch.nn as nn
 from transformers import BertTokenizer, BertModel
 
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class Decoder(nn.Module):
 
-    def __init__(self, vocab_size, use_glove, use_bert, glove_vectors):
+    def __init__(self, vocab_size, use_glove, use_bert, glove_vectors, vocab):
         super(Decoder, self).__init__()
+        self.vocab = vocab
         self.encoder_dim = 2048
         self.attention_dim = 512
         self.use_bert = use_bert
@@ -55,7 +58,8 @@ class Decoder(nn.Module):
             for p in self.embedding.parameters():
                 p.requires_grad = True
 
-    def forward(self, encoder_out, encoded_captions, caption_lengths, vocab):
+    def forward(self, encoder_out, encoded_captions, caption_lengths):
+
         batch_size = encoder_out.size(0)
         encoder_dim = encoder_out.size(-1)
         vocab_size = self.vocab_size
@@ -76,13 +80,13 @@ class Decoder(nn.Module):
 
 
             for cap_idx in  encoded_captions:
-                print(cap_idx)
+                #print(cap_idx)
 
                 # padd caption to correct size
                 while len(cap_idx) < max_dec_len:
                     cap_idx.append(PAD)
 
-                cap = ' '.join([vocab.idx2word[word_idx.item()] for word_idx in cap_idx])
+                cap = ' '.join([self.vocab.idx2word[word_idx.item()] for word_idx in cap_idx])
                 cap = u'[CLS]  ' +cap
 
                 tokenized_cap = tokenizer.tokenize(cap)

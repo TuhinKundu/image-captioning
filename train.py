@@ -4,15 +4,19 @@ from data_loader import *
 from transformers import BertModel, BertTokenizer
 from utilities import *
 from Encoder import *
-from Decoder import *
+
 from torch.nn.utils.rnn import pack_padded_sequence
 from tqdm import tqdm
+from Decoder import *
+
 
 batch_size= 32
 #Load dataset vocabulary
 img_size=224
 dataset = 'flickr8k'
 vocab = pickle.load(open('dumps/vocab_'+dataset+'.pkl', 'rb'))
+
+
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -60,7 +64,7 @@ criterion = nn.CrossEntropyLoss().to(device)
 if from_checkpoint:
 
     encoder = Encoder_Resnet101().to(device)
-    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model).to(device)
+    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, vocab=vocab).to(device)
 
     if torch.cuda.is_available():
         if bert_model:
@@ -95,7 +99,7 @@ if from_checkpoint:
     decoder_optimizer.load_state_dict(decoder_checkpoint['optimizer_state_dict'])
 else:
     encoder = Encoder_Resnet101().to(device)
-    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, glove_vectors=glove_vectors).to(device)
+    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, glove_vectors=glove_vectors, vocab=vocab).to(device)
     decoder_optimizer = torch.optim.Adam(params=decoder.parameters(),lr=decoder_lr)
 
 
