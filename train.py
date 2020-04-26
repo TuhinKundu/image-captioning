@@ -8,19 +8,42 @@ from Encoder import *
 from torch.nn.utils.rnn import pack_padded_sequence
 from tqdm import tqdm
 from Decoder import *
+import argparse
+
+
+parser = argparse.ArgumentParser(description='Model Name')
+parser.add_argument('--encoder', type=str, default="resnet101")
+parser.add_argument('--decoder', type=str, default='baseline')
+parser.add_argument('--dataset', type=str, default='flickr8k')
+flags = parser.parse_args()
+encoder_type = flags.encoder
+decoder_type = flags.decoder
+dataset = flags.dataset
+
+
+glove_model = False
+bert_model = False
+glove_vectors = None
+
+if decoder_type=='glove':
+    glove_model = True
+    glove_pickle_path = 'dumps/glove_twitter_27B_200.pkl'
+    glove_vectors = pickle.load(open(glove_pickle_path, 'rb'))
+    glove_vectors = torch.tensor(glove_vectors)
+elif decoder_type == 'bert':
+    bert_model = True
 
 
 batch_size= 32
 #Load dataset vocabulary
 img_size=224
-dataset = 'flickr8k'
+
 vocab = pickle.load(open('dumps/vocab_'+dataset+'.pkl', 'rb'))
-
-
+print(encoder_type, decoder_type, dataset)
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+#device = torch.device('cpu')
 # Load pre-trained model tokenizer (vocabulary)
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -28,26 +51,21 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 BertModel = BertModel.from_pretrained('bert-base-uncased').to(device)
 BertModel.eval()
 
-# Load GloVe
-glove_pickle_path = 'dumps/glove_twitter_27B_200.pkl'
-glove_vectors = pickle.load(open(glove_pickle_path, 'rb'))
-glove_vectors = torch.tensor(glove_vectors)
+
+
 
 
 # Model hyperparameters
 grad_clip = 5.
-num_epochs = 4
+num_epochs = 10
 batch_size = 32
 decoder_lr = 0.0004
 
 # if both are false them model = baseline
 
-glove_model = False
-bert_model = False
 
-from_checkpoint = False
-train_model = False
-valid_model = True
+
+
 
 PAD = 0
 START = 1
@@ -56,55 +74,20 @@ UNK = 3
 
 train_loader = get_loader('train', dataset, vocab, img_size, batch_size)
 #train_loader = get_loader('train', vocab, batch_size)
-val_loader = get_loader('val', dataset, vocab, img_size, batch_size)
+
 
 
 criterion = nn.CrossEntropyLoss().to(device)
 
-if from_checkpoint:
-
-    encoder = Encoder_Resnet101().to(device)
-    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, vocab=vocab).to(device)
-
-    if torch.cuda.is_available():
-        if bert_model:
-            print('Pre-Trained BERT Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_bert')
-            decoder_checkpoint = torch.load('checkpoints/decoder_bert')
-        elif glove_model:
-            print('Pre-Trained GloVe Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_glove')
-            decoder_checkpoint = torch.load('checkpoints/decoder_glove')
-        else:
-            print('Pre-Trained Baseline Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_baseline')
-            decoder_checkpoint = torch.load('checkpoints/decoder_baseline')
-    else:
-        if bert_model:
-            print('Pre-Trained BERT Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_bert', map_location='cpu')
-            decoder_checkpoint = torch.load('checkpoints/decoder_bert', map_location='cpu')
-        elif glove_model:
-            print('Pre-Trained GloVe Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_glove', map_location='cpu')
-            decoder_checkpoint = torch.load('checkpoints/decoder_glove', map_location='cpu')
-        else:
-            print('Pre-Trained Baseline Model')
-            encoder_checkpoint = torch.load('checkpoints/encoder_baseline', map_location='cpu')
-            decoder_checkpoint = torch.load('checkpoints/decoder_baseline', map_location='cpu')
-
-    encoder.load_state_dict(encoder_checkpoint['model_state_dict'])
-    decoder_optimizer = torch.optim.Adam(params=decoder.parameters(), lr=decoder_lr)
-    decoder.load_state_dict(decoder_checkpoint['model_state_dict'])
-    decoder_optimizer.load_state_dict(decoder_checkpoint['optimizer_state_dict'])
-else:
-    encoder = Encoder_Resnet101().to(device)
-    decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, glove_vectors=glove_vectors, vocab=vocab).to(device)
-    decoder_optimizer = torch.optim.Adam(params=decoder.parameters(),lr=decoder_lr)
+encoder = Encoder_Resnet101().to(device)
+decoder = Decoder(vocab_size=len(vocab),use_glove=glove_model, use_bert=bert_model, glove_vectors=glove_vectors, vocab=vocab).to(device)
+decoder_optimizer = torch.optim.Adam(params=decoder.parameters(),lr=decoder_lr)
 
 
 def train():
     print("Started training...")
+    epoch=0
+    loss=-1
     for epoch in tqdm(range(num_epochs)):
         decoder.train()
         encoder.train()
@@ -171,16 +154,30 @@ def train():
             'model_state_dict': decoder.state_dict(),
             'optimizer_state_dict': decoder_optimizer.state_dict(),
             'loss': loss,
-        }, 'checkpoints/decoder_epoch' + str(epoch + 1))
+        }, 'checkpoints/decoder_epoch' + str(epoch + 1)+'.pt')
 
         torch.save({
             'epoch': epoch,
             'model_state_dict': encoder.state_dict(),
             'loss': loss,
-        }, 'checkpoints/encoder_epoch' + str(epoch + 1))
+        }, 'checkpoints/encoder_epoch' + str(epoch + 1)+'.pt')
 
         print('epoch checkpoint saved')
 
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': decoder.state_dict(),
+        'optimizer_state_dict': decoder_optimizer.state_dict(),
+        'loss': loss,
+    }, 'checkpoints/decoder_'+encoder_type+'_'+decoder_type+'.pt')
+
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': encoder.state_dict(),
+        'loss': loss,
+    }, 'checkpoints/encoder_'+encoder_type+'_'+decoder_type+'.pt')
+
+    print('epoch checkpoint saved')
     print("Completed training...")
 
 

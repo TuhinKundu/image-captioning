@@ -23,7 +23,7 @@ class DataLoader(data.Dataset):
         vocab = self.vocab
         ann_id = self.ids[index]
         caption = self.data[ann_id]['caption']
-        print(caption)
+        #print(caption)
         #img_id = coco.anns[ann_id]['image_id']
         #path = coco.loadImgs(img_id)[0]['file_name']
 
@@ -85,8 +85,8 @@ def get_loader(method, dataset, vocab, img_size, batch_size=32):
             for c in img['sentences']:
                 captions.append(c['tokens'])
             img_map[img['imgid']]['caption'] = captions[-1]
-
-
+    #print("train ids:")
+    print(len(img_ids))
     transform = transforms.Compose([
         transforms.RandomCrop(224),
         transforms.RandomHorizontalFlip(),

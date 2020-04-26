@@ -51,3 +51,5 @@ with open('dumps/vocab_flickr8k.pkl', 'rb') as f:
     vocab = pickle.load(f)
 train_load= get_loader('val', 'flickr8k', vocab, 224, 32)
 print(train_load)
+
+train_loader = get_loader('test', dataset='flickr8k', vocab=vocab, img_size=224)

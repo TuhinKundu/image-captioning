@@ -4,6 +4,10 @@ from transformers import BertTokenizer, BertModel
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cpu')
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+BertModel = BertModel.from_pretrained('bert-base-uncased').to(device)
+BertModel.eval()
 
 
 class Decoder(nn.Module):
@@ -16,7 +20,7 @@ class Decoder(nn.Module):
         self.use_bert = use_bert
 
         if use_glove:
-            self.embed_dim = 300
+            self.embed_dim = 200
         elif use_bert:
             self.embed_dim = 768
         else:
@@ -74,10 +78,10 @@ class Decoder(nn.Module):
             embeddings = self.embedding(encoded_captions)
         elif self.use_bert:
             embeddings = []
-            tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
             PAD=0
 
-
+            idx2word = {self.vocab[key]: key for key in list(self.vocab.keys())}
 
             for cap_idx in  encoded_captions:
                 #print(cap_idx)
@@ -86,7 +90,7 @@ class Decoder(nn.Module):
                 while len(cap_idx) < max_dec_len:
                     cap_idx.append(PAD)
 
-                cap = ' '.join([self.vocab.idx2word[word_idx.item()] for word_idx in cap_idx])
+                cap = ' '.join([idx2word[word_idx.item()] for word_idx in cap_idx])
                 cap = u'[CLS]  ' +cap
 
                 tokenized_cap = tokenizer.tokenize(cap)
@@ -96,8 +100,8 @@ class Decoder(nn.Module):
                 with torch.no_grad():
                     encoded_layers, _ = BertModel(tokens_tensor)
 
-                bert_embedding = encoded_layers[11].squeeze(0)
-
+                bert_embedding = encoded_layers[-1].squeeze(0)
+                #print(bert_embedding.shape)
                 split_cap = cap.split()
                 tokens_embedding = []
                 j = 0
