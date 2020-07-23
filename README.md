@@ -28,7 +28,7 @@ sense of this information and organising this data is becoming increasingly impo
 a meaningful grammatically correct sentence to understand
 the scene holistically. It translates visual information to
 textual information by generating a description of an image using deep learning models. We use datasets such as
-Flickr8, Flickr30 and COCO 2014 to investigate the tradeoff between using various combinations of encoder-decoder
+Flickr8k, Flickr30 and COCO 2014 to investigate the tradeoff between using various combinations of encoder-decoder
 based models which comprise of convolutional and recurrent neural networks. We add embeddings obtained from
 language models such as Glove and BERT as weight initialization to our decoder unit to check for performance gains
 and to lower training time. We conclude that contextual embeddings obtained from BERT provide a significant performance in terms of BLEU score due to taking into account
