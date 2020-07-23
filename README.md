@@ -31,6 +31,15 @@ and to lower training time. We conclude that contextual embeddings obtained from
 contextual information that may be present in captions or
 sentences. 
 
+### Instructions to run 
+
+* Unzip dataset folders and keep them in dataset folder.
+* Perform image resizing, vocabulary creation, loading glove embedding, attaching captions with their appropriate photographs and create embeddings of the captions using functions present in utilities.py file.
+* Run the following command with appropriate parameters:
+> python train.py --encoder 'resnet101' --decoder 'glove' --dataset 'coco'
+* Possible parameters for the above command:
+> encoder: [resnet101]; decoder: [lstm, glove, bert]; dataset [coco, flickr8k, flickr30k]
+
 
 ### Credits
 
