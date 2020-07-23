@@ -8,6 +8,10 @@ Model contains encoder-decoder architecture where Resnet-101 is used as the enco
 
 * torch
 * transformers
+* h5py 
+* imageio
+* PIL
+* tqdm
 
 ### Dataset and other requirements
 * [Andrej Karpathy's training, validation and test splits](http://cs.stanford.edu/people/karpathy/deepimagesent/caption_datasets.zip)
