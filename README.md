@@ -16,6 +16,21 @@ Model contains encoder-decoder architecture where Resnet-101 is used as the enco
 * [Flickr30k dataset](http://shannon.cs.illinois.edu/DenotationGraph/)
 * [Glove embeddings](https://nlp.stanford.edu/projects/glove/) (Twitter, 200d, glove.twitter.27B.zip)
 
+### Abstract
+
+With an immense amount of visual information being
+generated and aggregated from various sources, making
+sense of this information and organising this data is becoming increasingly important. Image captioning is generating
+a meaningful grammatically correct sentence to understand
+the scene holistically. It translates visual information to
+textual information by generating a description of an image using deep learning models. We use datasets such as
+Flickr8, Flickr30 and COCO 2014 to investigate the tradeoff between using various combinations of encoder-decoder
+based models which comprise of convolutional and recurrent neural networks. We add embeddings obtained from
+language models such as Glove and BERT as weight initialization to our decoder unit to check for performance gains
+and to lower training time. We conclude that contextual embeddings obtained from BERT provide a significant performance in terms of BLEU score due to taking into account
+contextual information that may be present in captions or
+sentences. 
+
 
 ### Credits
 
