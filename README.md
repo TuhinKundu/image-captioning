@@ -43,6 +43,8 @@ sentences.
 > python train.py --encoder 'resnet101' --decoder 'glove' --dataset 'coco'
 * Possible parameters for the above command:
 > encoder: [resnet101]; decoder: [lstm, glove, bert]; dataset [coco, flickr8k, flickr30k]
+* For testing:
+> python validation.py --encoder 'resnet101' --decoder 'glove' --dataset 'coco'
 
 
 ### Credits
